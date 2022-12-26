@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link href="mystyle.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+<h2>Welcome to the ChatRoom!</h2>
+<script src = "/socket.io/socket.io.js"></script> 
+<script> var globalID = "mess";
+         var globalButton = "butt";
+         var count = 1;
+         var socket = io();
+</script>
+
+<div class="container" id="root">
+  <textarea id="mess" placeholder="Type.." rows="5" cols="50"></textarea>
+  <button id="butt"  onclick="sendMessage()" type="button"> Send </button>
+  <script>
+      
+      function sendMessage() {
+         var currentdate = new Date(); 
+         var element = document.getElementById(globalID);
+         var butt = document.getElementById(globalButton);
+         
+         var datetime = ""+ (currentdate.getMonth()+1) + "/"
+                + (currentdate.getDate())  + "/" 
+                + currentdate.getFullYear() + " "  
+                + (currentdate.getHours()) + ":"  
+                + currentdate.getMinutes();
+
+         var thismessage = element.value;
+         element.style.display='none';
+         butt.style.display='none';
+
+         var root = document.getElementById("root");
+         var parent = document.createElement("div");
+         parent.className = "container";
+
+         var para = document.createElement("p");
+         var node = document.createTextNode(thismessage);
+         para.appendChild(node);
+
+         var time = document.createElement("span");
+         time.className = "time-right";
+         time.innerHTML = datetime;
+
+         parent.appendChild(para);
+         parent.appendChild(time);
+         root.appendChild(parent);
+
+         var newText = document.createElement("textarea");
+         newText.id = "mess" + count;
+         newText.cols = 50;
+         newText.rows = 5
+         
+         var newButt = document.createElement("button");
+         newButt.onclick = function () { sendMessage(); };
+         newButt.id = "butt" + count;
+         newButt.innerHTML = " Send ";
+         root.appendChild(newText);
+         root.appendChild(newButt);
+
+         ++count;
+         globalButton = newButt.id;
+         globalID = newText.id;
+      }
+  </script>
+</div>
+</body>
+</html>

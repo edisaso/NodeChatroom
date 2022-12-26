@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<body>
+   <head>
+      <title>Chatroom</title>
+      <link href="mystyle.css" rel="stylesheet" type="text/css">
+      <body style="background-color:rgb(0, 0, 0);"></body>
+      <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+   </head>
+ 
+   <h2 id="head">Welcome to the ChatRoom!</h2>
+    <script src = "/socket.io/socket.io.js">
+    </script>
+   <p id="para">Please choose room to enter:</p>
+   <div id ="divide">
+     <textarea id="user_name" placeholder="Enter username" rows="1" 
+	     cols="15"></textarea>
+     <br/>     
+     <button id="butt1" onclick="sendUser()" type="button"> 
+	     Check Username</button>
+     <textarea hidden id="new_room" placeholder="Enter new room"
+   rows="1" cols="15"> </textarea>
+     <button  hidden id="butt" onclick="sendToServer()" type="button"> 
+	     Submit </button>
+
+    </div>
+ 
+    <script> 
+         var socket = io();
+         var username = "";
+         var room = "";
+
+    </script>
+
+  <div hidden class="container" id="root">
+    <textarea id="mess" placeholder="Type.." rows="5" cols="50"></textarea>
+    <button id="button"  onclick="sendMessage()" type="button"> Send </button>
+    <script>
+      function sendMessage() {
+	 
+         var currentdate = new Date();
+         var element = document.getElementById("mess");
+
+         var datetime = ""+ (currentdate.getMonth()+1) + "/"
+                + (currentdate.getDate())  + "/"
+                + currentdate.getFullYear() + " ";
+         var hour = currentdate.getHours();
+	 if (hour > 12) {
+             hour -= 12;
+	 }
+         var min = currentdate.getMinutes();
+	 if (min < 10) {
+             min = String('0' + min);
+	 }
+
+	 datetime += hour + ":" + min;
+         var thismessage = element.value;
+	 element.value = "";
+	
+	 socket.emit('sendMessage', { thisDate: datetime, 
+		    message: thismessage, currRoom: room, user: username }); 
+      }
+
+      socket.on("messageFromServer", function(data) {
+	
+	 var root = document.getElementById("root");
+         var parent = document.createElement("div");
+         parent.className = "container";
+
+         var para = document.createElement("p");
+         var node = document.createTextNode(data.mess);
+         para.appendChild(node);
+
+         var user_name = document.createElement("p");
+	 user_name.className = "username";
+         user_name.innerHTML = data.user_name;
+
+         var time = document.createElement("span");
+         time.className = "time-right";
+         time.innerHTML = data.datetime1;
+
+         parent.appendChild(user_name);
+         parent.appendChild(para);
+         parent.appendChild(time);
+         root.appendChild(parent);
+         
+      });
+     </script>
+   </div>
+     <script>
+         
+         function sendUser() {
+             var elem = document.getElementById("user_name");
+             var name = elem.value;
+	    
+             if (name.length < 1) {
+                alert("Please enter a username.");
+             } else {
+                socket.emit('checkUserName', { check:name });
+             }
+          }
+
+          function sendToServer() {
+               
+              var sel = document.getElementById( "selector");
+              var item = sel.options[sel.selectedIndex].value;
+              var element = document.getElementById("new_room");
+              var new_name = "";
+              
+              if (item == "new room") {
+                 new_name = element.value;
+		 socket.emit('chooseRoom', { value: new_name, isNew: true });
+              } else {
+                 //alert("You choose " + item + ".");
+                 socket.emit('chooseRoom', { value: item, isNew: false });
+              }
+         }
+   
+         function roomToBeChoosen() {
+              var sel = document.getElementById( "selector");
+              var item = sel.options[sel.selectedIndex].value;
+              if (item == "new room") {
+		 document.getElementById("_button").style.display = 'none';
+		 sel.style.display = 'none';
+                 document.getElementById("new_room").hidden = false;
+                 document.getElementById("butt").hidden = false;
+	      } else {
+		  document.getElementById("_button").style.display = 'none';
+                  sendToServer();
+	      }
+	 }
+
+        //We can also emit events from the client. To emit an event 
+        //from your client, use the emit function on the socket object.
+      
+        //socket.emit('clientEvent', 'Sent an event from the client!');
+      
+        /*To handle this custom event on client we need a listener that 
+        listens for the event testerEvent.*/
+        
+        socket.on('UserNotAppr', function(data) {
+             alert("username already taken, please choose another");
+        });
+
+        var parent = document.createElement("select");
+        parent.id = "selector";
+      
+        socket.on('roomApproved', function(data) {
+           alert(data.ext);
+           room = data.ext;
+           //window.location.assign('http://localhost:3000' + data.ext);
+	   document.getElementById("para").style.display = 'none';
+           document.getElementById("selector").style.display = 'none';
+           document.getElementById("butt").style.display = 'none';
+           document.getElementById("new_room").style.display = 'none';
+           document.getElementById("root").hidden = false;
+           document.getElementById("head").innerHTML =
+			"Welcome to the " + room + " Room, " + username + "!";
+         });
+      
+        var theseRooms;
+        //this will send namespaces available to new client
+        socket.on('sendRooms', function(data) { 
+             username = data.user;
+             document.getElementById("user_name").style.display = 'none';
+	     document.getElementById("butt1").style.display = 'none';
+	     //document.getElementById("new_room").hidden = false;
+             //document.getElementById("butt").hidden = false;
+	     
+             theseRooms = data.room;
+             //iterate thru the namespaces and add to html dropdown list
+	     for (i=0; i < theseRooms.length; ++i) {
+                var rm1 = document.createElement("option");
+                rm1.value = theseRooms[i];
+                rm1.text = theseRooms[i];
+                parent.appendChild(rm1);
+             }
+             //add option to create namespace
+             var rm = document.createElement("option");
+             rm.value = "new room";
+             rm.text = "new room";
+             parent.appendChild(rm);
+
+             var div = document.getElementById("divide");
+	     div.appendChild(document.createElement("br"));
+             div.appendChild(parent);
+
+             var button1 = document.createElement("button");
+	     button1.type = "button";
+             button1.onclick = function() { roomToBeChoosen() };
+	     button1.id = "_button";
+	     button1.innerHTML = "Submit";
+	     div.appendChild(button1);
+        });
+
+   </script>
+  </body>
+</html>
