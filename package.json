@@ -86,7 +86,8 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "preinstall": "node chatroom.js",
+    "postinstall": "node chatroom.js"
   },
   "keywords": [
     "chatroom"
