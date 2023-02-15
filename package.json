@@ -86,8 +86,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "preinstall": "node chatroom.js",
-    "postinstall": "node chatroom.js"
+"build": "node chatroom.js"
   },
   "keywords": [
     "chatroom"
