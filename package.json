@@ -86,7 +86,7 @@
   },
   "devDependencies": {},
   "scripts": {
-"build": "node chatroom.js"
+"start": "node chatroom.js"
   },
   "keywords": [
     "chatroom"
